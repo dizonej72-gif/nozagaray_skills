@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, j
 import sqlite3
 import os
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='../templates', static_folder='../static')
 app.secret_key = 'norzagaray_secret_key'
 
 DATABASE = 'portal.db'
