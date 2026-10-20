@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Norzagaray Skills Portal</title>
     <style>
         body { 
@@ -33,7 +34,7 @@
             display: none; position: absolute; right: 0;
             background-color: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px);
             min-width: 300px; box-shadow: 0px 10px 30px rgba(0,0,0,0.5);
-            border-radius: 12px; z-index: 1; padding: 15px;
+            border-radius: 12px; z-index: 10; padding: 15px;
             border: 1px solid rgba(255, 255, 255, 0.15); margin-top: 8px; color: #f1f5f9;
         }
         .dropdown-content.show { display: block; }
@@ -86,9 +87,89 @@
         .btn:hover { background: #0284c7; }
         .section-view { display: none; }
         .section-view.active-view { display: block; }
+
+        .clickable-user {
+            cursor: pointer;
+            color: #38bdf8;
+            transition: color 0.2s;
+        }
+        .clickable-user:hover {
+            text-decoration: underline;
+            color: #0ea5e9;
+        }
+
+        /* Modal / Popup Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-box {
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            width: 350px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            text-align: center;
+            position: relative;
+        }
+        .close-btn {
+            position: absolute;
+            top: 10px; right: 15px;
+            background: none; border: none;
+            color: #94a3b8; font-size: 18px; cursor: pointer;
+        }
+        .close-btn:hover { color: #ffffff; }
+
+        .chat-list-item {
+            background: rgba(30, 41, 59, 0.6);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background 0.2s;
+        }
+        .chat-list-item:hover {
+            background: rgba(51, 65, 85, 0.8);
+        }
+
+        .chat-bubble-sender {
+            background: #0ea5e9;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 12px 12px 0 12px;
+            margin: 4px 0 4px auto;
+            max-width: 75%;
+            font-size: 13px;
+            text-align: right;
+            word-break: break-word;
+        }
+        .chat-bubble-receiver {
+            background: #334155;
+            color: #f1f5f9;
+            padding: 8px 12px;
+            border-radius: 12px 12px 12px 0;
+            margin: 4px auto 4px 0;
+            max-width: 75%;
+            font-size: 13px;
+            text-align: left;
+            word-break: break-word;
+        }
     </style>
 </head>
 <body>
+
+    <div id="messagesDataContainer" style="display: none;">{{ messages | tojson }}</div>
+    <div id="usersDataContainer" style="display: none;">{{ users_list | tojson }}</div>
 
     <header>
         <div class="logo">Norzagaray Skills Portal ({{ role | capitalize }})</div>
@@ -106,29 +187,21 @@
             <div class="dropdown">
                 <button onclick="toggleDropdown(event, 'msgDropdown')" class="dropbtn">💬 {{ t.messages }}</button>
                 <div id="msgDropdown" class="dropdown-content">
-                    <h4 style="margin-top: 0; color: #38bdf8;">{{ t.send_msg }}</h4>
-                    <form action="/send_message" method="POST">
-                        <label style="font-size: 12px; color: #94a3b8;">{{ t.recipient }}:</label>
-                        <select name="receiver" required style="background: #0f172a; color: #f1f5f9;">
-                            <option value="">{{ t.select_user }}</option>
-                            {% for u in users_list %}
-                                {% if u[0] != user %}
-                                <option value="{{ u[0] }}">{{ u[0] }} ({{ u[1] | capitalize }})</option>
-                                {% endif %}
-                            {% endfor %}
-                        </select>
-                        <textarea name="message" placeholder="{{ t.type_msg }}" rows="2" required></textarea>
-                        <button type="submit" class="btn" style="padding: 6px;">{{ t.send }}</button>
-                    </form>
+                    <h4 style="margin-top: 0; color: #38bdf8;">Messenger Conversations</h4>
                     
-                    <h4 style="margin-bottom: 5px; font-size: 13px; color: #e2e8f0; margin-top: 15px;">{{ t.inbox }}</h4>
-                    <div id="inboxContainer" style="max-height: 150px; overflow-y: auto;">
+                    <div id="inboxContainer" style="max-height: 250px; overflow-y: auto;">
+                        {% set contacts = [] %}
                         {% for msg in messages %}
-                            <p style="background: rgba(30, 41, 59, 0.6); padding: 8px; border-radius: 6px; font-size: 12px; margin: 4px 0;">
-                                <b style="color: #38bdf8;">{{ msg[0] }} ➔ {{ msg[1] }}:</b> {{ msg[2] }}
-                            </p>
+                            {% set other_user = msg[1] if msg[0] == user else msg[0] %}
+                            {% if other_user not in contacts %}
+                                {% set _ = contacts.append(other_user) %}
+                                <div class="chat-list-item" onclick="openChatThread('{{ other_user }}')">
+                                    <span style="font-weight: bold; color: #38bdf8;">👤 {{ other_user }}</span>
+                                    <span style="font-size: 11px; color: #94a3b8;">Chat ➔</span>
+                                </div>
+                            {% endif %}
                         {% else %}
-                            <p style="color: #94a3b8; font-size: 12px;">{{ t.no_msg }}</p>
+                            <p style="color: #94a3b8; font-size: 12px;">No messages yet.</p>
                         {% endfor %}
                     </div>
                 </div>
@@ -213,10 +286,10 @@
                     {% if u[1] == 'employer' %}
                         {% set has_applicant.found = true %}
                         <div style="background: rgba(30, 41, 59, 0.6); padding: 12px; border-radius: 8px; margin-bottom: 10px;">
-                            <p style="margin: 0; font-weight: bold; color: #34d399; font-size: 15px;">👤 {{ u[0] }}</p>
-                            <p style="margin: 4px 0; font-size: 13px; color: #cbd5e1;"><b>Barangay:</b> {{ u[3] }}</p>
-                            <p style="margin: 4px 0; font-size: 13px; color: #38bdf8;"><b>Skills:</b> {{ u[4] }}</p>
-                            <p style="margin: 4px 0; font-size: 13px; color: #a7f3d0;"><b>Phone:</b> {{ u[5] }}</p>
+                            <p style="margin: 0; font-weight: bold; font-size: 15px;">
+                                👤 <span class="clickable-user" onclick="handleUserClick('{{ u[0] }}')">{{ u[0] }}</span>
+                            </p>
+                            <p style="margin: 4px 0 0 0; font-size: 13px; color: #38bdf8;"><b>Skills:</b> {{ u[4] }}</p>
                         </div>
                     {% endif %}
                 {% endfor %}
@@ -235,7 +308,9 @@
                     {% if u[1] == 'employee' %}
                         {% set has_comp.found = true %}
                         <div style="background: rgba(30, 41, 59, 0.6); padding: 12px; border-radius: 8px; margin-bottom: 10px;">
-                            <p style="margin: 0; font-weight: bold; color: #38bdf8; font-size: 15px;">🏢 {{ u[0] }}</p>
+                            <p style="margin: 0; font-weight: bold; font-size: 15px;">
+                                🏢 <span class="clickable-user" onclick="handleUserClick('{{ u[0] }}')">{{ u[0] }}</span>
+                            </p>
                             <p style="margin: 4px 0; font-size: 13px; color: #cbd5e1;"><b>Company:</b> {{ u[2] if u[2] else 'N/A' }}</p>
                         </div>
                     {% endif %}
@@ -248,7 +323,182 @@
 
     </div>
 
+    <!-- User Action Modal -->
+    <div id="userActionModal" class="modal-overlay">
+        <div class="modal-box">
+            <button class="close-btn" onclick="closeModal('userActionModal')">✖</button>
+            <h3 id="targetUserName" style="color: #38bdf8; margin-top: 5px;">User Action</h3>
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+                <button class="btn" onclick="showSendMessageForm()">💬 Send Message</button>
+                <button class="btn" style="background: #334155;" onclick="showProfileView()">👤 View Profile</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dynamic View Profile Modal -->
+    <div id="profileModal" class="modal-overlay">
+        <div class="modal-box">
+            <button class="close-btn" onclick="closeModal('profileModal')">✖</button>
+            <h3 id="profName" style="color: #34d399; margin-top: 5px;">Profile Details</h3>
+            <p id="profRoleTag" style="font-size: 12px; color: #38bdf8; margin: -5px 0 10px 0; font-weight: bold;"></p>
+            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 10px 0;">
+            
+            <div style="text-align: left; font-size: 14px; line-height: 1.6;">
+                <div id="skillsRow"><p><b>🛠️ Skills:</b> <span id="profSkills"></span></p></div>
+                <div id="companyRow" style="display: none;"><p><b>🏢 Company:</b> <span id="profCompany"></span></p></div>
+                
+                <p><b>📍 Barangay:</b> <span id="profBarangay"></span></p>
+                <p><b>📞 Contact Number:</b> <span id="profPhone"></span></p>
+            </div>
+            <button class="btn" style="margin-top: 15px;" onclick="closeModal('profileModal')">Close</button>
+        </div>
+    </div>
+
+    <!-- Messenger Chat Thread Modal (Real-Time Active Chat) -->
+    <div id="chatThreadModal" class="modal-overlay">
+        <div class="modal-box" style="width: 380px;">
+            <button class="close-btn" onclick="closeModal('chatThreadModal')">✖</button>
+            <h3 style="color: #38bdf8; margin-top: 5px;" id="chatThreadTitle">Chat Window</h3>
+            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 10px 0;">
+            
+            <div id="chatMessagesArea" style="height: 220px; overflow-y: auto; display: flex; flex-direction: column; padding-right: 5px;">
+            </div>
+
+            <form id="directChatForm" action="/send_message" method="POST" onsubmit="submitDirectMessage(event, this)" style="margin-top: 10px;">
+                <input type="hidden" name="receiver" id="chatThreadReceiverInput">
+                <textarea name="message" id="chatMessageInput" placeholder="Type a message..." rows="2" required style="margin-bottom: 8px; font-size: 13px;"></textarea>
+                <button type="submit" class="btn" style="padding: 8px;">Send</button>
+            </form>
+        </div>
+    </div>
+
     <script>
+        let selectedUser = { name: '', role: '', company: '', barangay: '', skills: '', phone: '' };
+        let allMessagesData = JSON.parse(document.getElementById('messagesDataContainer').innerText || "[]");
+        let allUsersData = JSON.parse(document.getElementById('usersDataContainer').innerText || "[]");
+        let currentUser = "{{ user }}";
+        let activeChatRecipient = null;
+
+        function handleUserClick(name) {
+            if (name === currentUser) {
+                alert("Hindi mo pwedeng i-message o i-view ang sarili mong profile.");
+                return;
+            }
+
+            let found = allUsersData.find(u => u[0] === name);
+            if (found) {
+                selectedUser = {
+                    name: found[0],
+                    role: found[1],
+                    company: found[2],
+                    barangay: found[3],
+                    skills: found[4],
+                    phone: found[5]
+                };
+            } else {
+                selectedUser = { name: name, role: 'employer', company: '', barangay: '', skills: '', phone: '' };
+            }
+
+            document.getElementById('targetUserName').innerText = name;
+            document.getElementById('userActionModal').style.display = 'flex';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+            if (id === 'chatThreadModal') {
+                activeChatRecipient = null;
+            }
+        }
+
+        function showProfileView() {
+            closeModal('userActionModal');
+            document.getElementById('profName').innerText = selectedUser.name;
+            document.getElementById('profBarangay').innerText = selectedUser.barangay || 'N/A';
+            document.getElementById('profPhone').innerText = selectedUser.phone || 'N/A';
+
+            if (selectedUser.role === 'employee') {
+                document.getElementById('profRoleTag').innerText = "🏢 Employer / Company";
+                document.getElementById('skillsRow').style.display = 'none';
+                document.getElementById('companyRow').style.display = 'block';
+                document.getElementById('profCompany').innerText = selectedUser.company || 'N/A';
+            } else {
+                document.getElementById('profRoleTag').innerText = "👷‍♂️ Worker / Job Seeker";
+                document.getElementById('skillsRow').style.display = 'block';
+                document.getElementById('companyRow').style.display = 'none';
+                document.getElementById('profSkills').innerText = selectedUser.skills || 'N/A';
+            }
+
+            document.getElementById('profileModal').style.display = 'flex';
+        }
+
+        function showSendMessageForm() {
+            closeModal('userActionModal');
+            openChatThread(selectedUser.name);
+        }
+
+        function openChatThread(otherUser) {
+            if (otherUser === currentUser) {
+                alert("Hindi mo pwedeng i-chat ang sarili mo.");
+                return;
+            }
+
+            activeChatRecipient = otherUser;
+            document.getElementById('msgDropdown').classList.remove('show');
+            document.getElementById('chatThreadTitle').innerText = '💬 Chat with ' + otherUser;
+            document.getElementById('chatThreadReceiverInput').value = otherUser;
+            
+            renderChatMessages();
+            document.getElementById('chatThreadModal').style.display = 'flex';
+        }
+
+        function renderChatMessages() {
+            if (!activeChatRecipient) return;
+
+            const area = document.getElementById('chatMessagesArea');
+            const wasAtBottom = area.scrollHeight - area.clientHeight <= area.scrollTop + 20;
+
+            area.innerHTML = '';
+
+            let thread = allMessagesData.filter(m => 
+                (m[0] === currentUser && m[1] === activeChatRecipient) || 
+                (m[0] === activeChatRecipient && m[1] === currentUser)
+            ).reverse();
+
+            if (thread.length > 0) {
+                thread.forEach(m => {
+                    if (m[0] === currentUser) {
+                        area.innerHTML += `<div class="chat-bubble-sender">${escapeHtml(m[2])}</div>`;
+                    } else {
+                        area.innerHTML += `<div class="chat-bubble-receiver">${escapeHtml(m[2])}</div>`;
+                    }
+                });
+            } else {
+                area.innerHTML = `<p style="color: #94a3b8; font-size: 12px; margin: auto;">Say hi to ${escapeHtml(activeChatRecipient)}!</p>`;
+            }
+
+            if (wasAtBottom || area.scrollTop === 0) {
+                area.scrollTop = area.scrollHeight;
+            }
+        }
+
+        function submitDirectMessage(event, form) {
+            event.preventDefault();
+            const formData = new FormData(form);
+
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => {
+                if (response.ok) {
+                    document.getElementById('chatMessageInput').value = '';
+                    fetchUpdates(true);
+                }
+            })
+            .catch(err => console.error('Error sending message:', err));
+        }
+
         function toggleDropdown(event, id) {
             event.stopPropagation();
             var dropdowns = document.getElementsByClassName("dropdown-content");
@@ -305,7 +555,8 @@
                 document.getElementById(savedTab).classList.add("active-view");
             }
             fetchUpdates();
-            setInterval(fetchUpdates, 3000);
+            // Ultra-fast Real-time Updates (Bawat 1 segundo para instant sa CP at PC)
+            setInterval(fetchUpdates, 1000);
         });
 
         window.onclick = function(event) {
@@ -318,11 +569,9 @@
             }
         }
 
-        // AJAX comment submission para lumabas agad at hindi bumabalik sa itaas/menu
         function submitComment(event, form, postId) {
             event.preventDefault();
             const formData = new FormData(form);
-            const scrollPos = window.scrollY;
 
             fetch(form.action, {
                 method: 'POST',
@@ -332,13 +581,13 @@
             .then(response => {
                 if (response.ok) {
                     form.reset();
-                    fetchUpdates();
+                    fetchUpdates(true);
                 }
             })
             .catch(err => console.error('Error submitting comment:', err));
         }
 
-        function fetchUpdates() {
+        function fetchUpdates(forceImmediate = false) {
             const scrollPos = window.scrollY;
 
             fetch('/api/updates')
@@ -346,10 +595,17 @@
                 .then(data => {
                     if (data.error) return;
 
+                    if (data.messages) {
+                        allMessagesData = data.messages.map(m => [m.sender, m.receiver, m.message]);
+                        if (activeChatRecipient) {
+                            renderChatMessages();
+                        }
+                    }
+
                     const activeEl = document.activeElement;
                     const isTyping = activeEl && (activeEl.closest('#empFeedContainer') || activeEl.closest('#employeeFeedContainer'));
 
-                    if (!isTyping) {
+                    if (!isTyping || forceImmediate) {
                         let empPostsHTML = '';
                         let employeePostsHTML = '';
 
@@ -365,7 +621,7 @@
                                     <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.15); margin: 10px 0;">
                                     <small style="color: #94a3b8; font-size: 12px;">
                                         <b>Barangay:</b> ${escapeHtml(post.barangay)} | 
-                                        <b>Posted by:</b> ${escapeHtml(post.posted_by)}
+                                        <b>Posted by:</b> <span class="clickable-user" onclick="handleUserClick('${escapeHtml(post.posted_by)}')">${escapeHtml(post.posted_by)}</span>
                                         ${post.phone ? `<br><b>📞 Phone:</b> <a href="tel:${escapeHtml(post.phone)}" style="color: #38bdf8; text-decoration: none;">${escapeHtml(post.phone)}</a>` : ''}
                                     </small>
 
@@ -377,14 +633,14 @@
                                     post.comments.forEach(comment => {
                                         postHTML += `
                                         <div style="background: rgba(30, 41, 59, 0.6); padding: 8px 10px; border-radius: 8px; margin-bottom: 6px; font-size: 13px;">
-                                            <b style="color: #38bdf8;">${escapeHtml(comment.commenter)}:</b> <span style="color: #f1f5f9;">${escapeHtml(comment.comment)}</span>`;
+                                            <b class="clickable-user" onclick="handleUserClick('${escapeHtml(comment.commenter)}')">${escapeHtml(comment.commenter)}:</b> <span style="color: #f1f5f9;">${escapeHtml(comment.comment)}</span>`;
                                             
                                         if (comment.replies && comment.replies.length > 0) {
                                             postHTML += `<div style="margin-left: 20px; margin-top: 6px; border-left: 2px solid #0ea5e9; padding-left: 8px;">`;
                                             comment.replies.forEach(reply => {
                                                 postHTML += `
                                                 <p style="margin: 4px 0; font-size: 12px; color: #cbd5e1;">
-                                                    <b style="color: #34d399;">${escapeHtml(reply.commenter)}:</b> ${escapeHtml(reply.comment)}
+                                                    <b class="clickable-user" onclick="handleUserClick('${escapeHtml(reply.commenter)}')">${escapeHtml(reply.commenter)}:</b> ${escapeHtml(reply.comment)}
                                                 </p>`;
                                             });
                                             postHTML += `</div>`;
