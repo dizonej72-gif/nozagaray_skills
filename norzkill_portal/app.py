@@ -3,73 +3,81 @@ import sqlite3
 import os
 
 app = Flask(__name__)
-app.secret_key = 'norzagaray_secret_key'
+app.secret_key = os.environ.get('SECRET_KEY', 'norzagaray_secret_key_12345')
 
-DATABASE = 'portal.db'
+# Paggamit ng absolute path para sa database upang hindi mag-error sa Render environment
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATABASE = os.path.join(BASE_DIR, 'portal.db')
 
 def get_db():
-    conn = sqlite3.connect(DATABASE)
+    conn = sqlite3.connect(DATABASE, timeout=10)
     conn.row_factory = sqlite3.Row
     return conn
 
 def init_db():
-    conn = get_db()
-    cursor = conn.cursor()
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL,
-            role TEXT NOT NULL,
-            company TEXT,
-            barangay TEXT,
-            skills TEXT,
-            phone TEXT
-        )
-    ''')
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS posts (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            posted_by TEXT,
-            title TEXT,
-            description TEXT,
-            barangay TEXT,
-            phone TEXT
-        )
-    ''')
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                password TEXT NOT NULL,
+                role TEXT NOT NULL,
+                company TEXT,
+                barangay TEXT,
+                skills TEXT,
+                phone TEXT
+            )
+        ''')
+        
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS posts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                posted_by TEXT,
+                title TEXT,
+                description TEXT,
+                barangay TEXT,
+                phone TEXT
+            )
+        ''')
 
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS comments (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            post_id INTEGER,
-            commenter TEXT,
-            comment TEXT,
-            parent_id INTEGER
-        )
-    ''')
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS comments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                post_id INTEGER,
+                commenter TEXT,
+                comment TEXT,
+                parent_id INTEGER
+            )
+        ''')
 
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS messages (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            sender TEXT,
-            receiver TEXT,
-            message TEXT
-        )
-    ''')
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                sender TEXT,
+                receiver TEXT,
+                message TEXT
+            )
+        ''')
 
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS notifications (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT,
-            message TEXT,
-            post_id INTEGER
-        )
-    ''')
-    
-    conn.commit()
-    conn.close()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS notifications (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT,
+                message TEXT,
+                post_id INTEGER
+            )
+        ''')
+        
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Database Init Error: {e}")
+
+# Siguraduhing ma-initialize ang database sa tuwing mag-start ang app
+init_db()
 
 TRANSLATIONS = {
     'en': {
@@ -174,21 +182,26 @@ def index():
     lang = session.get('lang', 'tl')
     t = TRANSLATIONS[lang]
     
-    conn = get_db()
-    cursor = conn.cursor()
-    
-    # Naka-convert na ito sa plain list of lists para maging JSON serializable
-    cursor.execute("SELECT username, role, company, barangay, skills, phone FROM users WHERE username != 'admin'")
-    users_list = [[row[0], row[1], row[2], row[3], row[4], row[5]] for row in cursor.fetchall()]
-    
-    cursor.execute("SELECT sender, receiver, message FROM messages WHERE receiver = ? OR sender = ? ORDER BY id DESC", (current_user, current_user))
-    messages = [[row[0], row[1], row[2]] for row in cursor.fetchall()]
-    
-    cursor.execute("SELECT message, post_id FROM notifications WHERE username = ? ORDER BY id DESC", (current_user,))
-    notifications = cursor.fetchall()
-    
-    conn.close()
-    
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT username, role, company, barangay, skills, phone FROM users WHERE username != 'admin'")
+        users_list = [[row[0], row[1], row[2], row[3], row[4], row[5]] for row in cursor.fetchall()]
+        
+        cursor.execute("SELECT sender, receiver, message FROM messages WHERE receiver = ? OR sender = ? ORDER BY id DESC", (current_user, current_user))
+        messages = [[row[0], row[1], row[2]] for row in cursor.fetchall()]
+        
+        cursor.execute("SELECT message, post_id FROM notifications WHERE username = ? ORDER BY id DESC", (current_user,))
+        notifications = [{'message': row[0], 'post_id': row[1]} for row in cursor.fetchall()]
+        
+        conn.close()
+    except Exception as e:
+        print(f"Index Error: {e}")
+        users_list = []
+        messages = []
+        notifications = []
+
     return render_template('index.html', 
                            users_list=users_list, 
                            user=current_user,
@@ -207,10 +220,10 @@ def admin():
     cursor = conn.cursor()
     
     cursor.execute("SELECT * FROM users ORDER BY id DESC")
-    users = cursor.fetchall()
+    users = [dict(row) for row in cursor.fetchall()]
     
     cursor.execute("SELECT * FROM posts ORDER BY id DESC")
-    posts = cursor.fetchall()
+    posts = [dict(row) for row in cursor.fetchall()]
     
     conn.close()
     return render_template('admin.html', users=users, posts=posts)
@@ -381,6 +394,10 @@ def send_message():
     cursor.execute("INSERT INTO notifications (username, message, post_id) VALUES (?, ?, ?)", (receiver, notif_msg, None))
     conn.commit()
     conn.close()
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({'success': True})
+        
     return redirect(url_for('index'))
 
 @app.route('/api/updates')
@@ -431,6 +448,5 @@ def api_updates():
     })
 
 if __name__ == '__main__':
-    init_db()
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
