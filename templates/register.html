@@ -41,6 +41,7 @@
             margin-top: 20px; transition: background 0.2s;
         }
         .btn:hover { background: #0284c7; }
+        .error { color: #f87171; font-size: 12px; text-align: center; margin-bottom: 10px; background: rgba(239, 68, 68, 0.1); padding: 8px; border-radius: 6px; }
         .login-link { text-align: center; margin-top: 15px; font-size: 13px; }
         .login-link a { color: #38bdf8; text-decoration: none; }
         .login-link a:hover { text-decoration: underline; }
@@ -50,10 +51,15 @@
 
     <div class="register-card">
         <h2>Create Account</h2>
+        
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+
         <form action="/register" method="POST">
             
-            <label>Username:</label>
-            <input type="text" name="username" required autocomplete="off">
+            <label>Full Name:</label>
+            <input type="text" name="username" placeholder="e.g. Juan dela Cruz" required autocomplete="off">
             
             <label>Password:</label>
             <input type="password" name="password" required>
@@ -74,14 +80,14 @@
                     <option value="Bigte">Bigte</option>
                     <option value="Bitungol">Bitungol</option>
                     <option value="Friendship Village Resources (FVR)">Friendship Village Resources (FVR)</option>
-                    <option value="Norzagaray Poblacion">Norzagaray Poblacion</option>
                     <option value="Matictic">Matictic</option>
                     <option value="Minuyan">Minuyan</option>
+                    <option value="Norzagaray Poblacion">Norzagaray Poblacion</option>
                     <option value="Partida">Partida</option>
                     <option value="Pinagtulayan">Pinagtulayan</option>
+                    <option value="Poblacion">Poblacion</option>
                     <option value="San Mateo">San Mateo</option>
                     <option value="Tigbe">Tigbe</option>
-                    <option value="Towerville">Towerville</option>
                 </select>
 
                 <label>Skills:</label>
