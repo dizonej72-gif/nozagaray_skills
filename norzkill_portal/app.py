@@ -177,7 +177,7 @@ def index():
     conn = get_db()
     cursor = conn.cursor()
     
-    # Kina-convert sa plain Python Lists para maging JSON serializable
+    # Lahat ng database queries ay ginawang standard Python lists/dicts para ligtas sa JSON
     cursor.execute("SELECT username, role, company, barangay, skills, phone FROM users WHERE username != 'admin'")
     users_list = [[row[0], row[1], row[2], row[3], row[4], row[5]] for row in cursor.fetchall()]
     
