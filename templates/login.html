@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Norzagaray Portal</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            background: url('/static/norz.jpg.webp');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 12px;
+            width: 350px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            color: #ffffff;
+            border: 1px solid #334155;
+        }
+        h2 { text-align: center; color: #38bdf8; margin-top: 0; }
+        label { font-size: 13px; color: #cbd5e1; }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0 15px 0;
+            border-radius: 6px;
+            border: 1px solid #475569;
+            background: #1e293b;
+            color: #ffffff;
+            box-sizing: border-box;
+        }
+        .btn {
+            width: 100%;
+            padding: 10px;
+            background: #0284c7;
+            color: white;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .btn:hover { background: #0ea5e9; }
+        .error { color: #f87171; font-size: 12px; text-align: center; margin-bottom: 10px; background: rgba(239, 68, 68, 0.1); padding: 8px; border-radius: 6px; }
+        .link { text-align: center; margin-top: 15px; font-size: 13px; }
+        .link a { color: #38bdf8; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Login Portal</h2>
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+        <form action="/login" method="POST">
+            <label>Full Name</label>
+            <input type="text" name="username" placeholder="Enter Full Name" required autocomplete="off">
+
+            <label>Password</label>
+            <input type="password" name="password" placeholder="Enter Password" required>
+
+            <button type="submit" class="btn">Login</button>
+        </form>
+        <div class="link">
+            <p>Don't have an account? <a href="/register">Register here</a></p>
+        </div>
+    </div>
+</body>
+</html>
