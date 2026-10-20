@@ -177,7 +177,7 @@ def index():
     conn = get_db()
     cursor = conn.cursor()
     
-    # Lahat ng database queries ay ginawang standard Python lists/dicts para ligtas sa JSON
+    # Naka-convert na ito sa plain list of lists para maging JSON serializable
     cursor.execute("SELECT username, role, company, barangay, skills, phone FROM users WHERE username != 'admin'")
     users_list = [[row[0], row[1], row[2], row[3], row[4], row[5]] for row in cursor.fetchall()]
     
@@ -185,7 +185,7 @@ def index():
     messages = [[row[0], row[1], row[2]] for row in cursor.fetchall()]
     
     cursor.execute("SELECT message, post_id FROM notifications WHERE username = ? ORDER BY id DESC", (current_user,))
-    notifications = [{'message': row[0], 'post_id': row[1]} for row in cursor.fetchall()]
+    notifications = cursor.fetchall()
     
     conn.close()
     
@@ -381,10 +381,6 @@ def send_message():
     cursor.execute("INSERT INTO notifications (username, message, post_id) VALUES (?, ?, ?)", (receiver, notif_msg, None))
     conn.commit()
     conn.close()
-    
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return jsonify({'success': True})
-        
     return redirect(url_for('index'))
 
 @app.route('/api/updates')
