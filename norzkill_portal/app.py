@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, j
 import sqlite3
 import os
 
-app = Flask(__name__, template_folder='../templates', static_folder='../static')
+app = Flask(__name__)
 app.secret_key = 'norzagaray_secret_key'
 
 DATABASE = 'portal.db'
@@ -88,7 +88,7 @@ TRANSLATIONS = {
         'send_msg': 'Send Message',
         'recipient': 'Recipient',
         'select_user': '-- Select User --',
-        'type_msg': 'Type your message...',
+        'type_msg': 'Type message...',
         'send': 'Send',
         'inbox': 'Inbox',
         'no_msg': 'No messages yet.',
@@ -110,47 +110,47 @@ TRANSLATIONS = {
         'companies_title': 'List of Registered Companies',
         'no_workers': 'No registered workers yet.',
         'no_companies': 'No registered companies yet.',
-        'menu_title': 'Categories / Menu'
+        'menu_title': 'Menu'
     },
     'tl': {
-        'hi': 'Kamusta',
-        'messages': 'Mensahe',
-        'notifs': 'Notipikasyon',
-        'logout': 'Mag-logout',
-        'post_job': 'Mag-post ng Ad / Trabaho',
-        'job_title': 'Pamagat ng Trabaho / Kasanayan',
-        'job_details': 'Detalye ng Trabaho',
+        'hi': 'Hi',
+        'messages': 'Messages',
+        'notifs': 'Notifications',
+        'logout': 'Logout',
+        'post_job': 'Post an Ad / Job Need',
+        'job_title': 'Job Title / Skill Needed',
+        'job_details': 'Job Details & Description',
         'barangay': 'Barangay',
-        'publish': 'I-publish ang Ad',
-        'community_feed': 'Feed ng Komunidad',
-        'registered_users': 'Mga Rehistradong User',
-        'skills': 'Kasanayan',
-        'send_msg': 'Magpadala ng Mensahe',
-        'recipient': 'Para kay',
-        'select_user': '-- Pumili ng User --',
-        'type_msg': 'I-type ang mensahe...',
-        'send': 'Ipadala',
-        'inbox': 'Mga Mensahe',
-        'no_msg': 'Wala pang mensahe.',
-        'notifications': 'Mga Notipikasyon',
-        'no_notif': 'Wala pang notipikasyon.',
-        'no_comments': 'Wala pang komento.',
-        'comment_placeholder': 'Mag-iwan ng komento...',
-        'comment_btn': 'Komento',
-        'reply_placeholder': 'Sumagot...',
-        'reply_btn': 'Sagot',
-        'no_posts': 'Wala pang mga post.',
-        'no_users': 'Wala pang rehistradong user.',
-        'tab_emp_posts': '📌 Posts para sa Employer',
-        'tab_employee_posts': '📌 Posts para sa Employee',
-        'tab_create': '✍️ Mag-post ng Ads',
-        'tab_workers': '👷‍♂️ Rehistradong Manggagawa',
-        'tab_companies': '🏢 Rehistradong Kumpanya',
-        'workers_title': 'Listahan ng mga Rehistradong Manggagawa / Job Seekers',
-        'companies_title': 'Listahan ng mga Rehistradong Kumpanya',
-        'no_workers': 'Wala pang rehistradong manggagawa.',
-        'no_companies': 'Wala pang rehistradong kumpanya.',
-        'menu_title': 'Kategorya / Menu'
+        'publish': 'Publish Ad',
+        'community_feed': 'Community Feed',
+        'registered_users': 'Registered Users',
+        'skills': 'Skills',
+        'send_msg': 'Send Message',
+        'recipient': 'Recipient',
+        'select_user': '-- Select User --',
+        'type_msg': 'Type message...',
+        'send': 'Send',
+        'inbox': 'Inbox',
+        'no_msg': 'No messages yet.',
+        'notifications': 'Notifications',
+        'no_notif': 'No notifications yet.',
+        'no_comments': 'No comments yet.',
+        'comment_placeholder': 'Write a comment...',
+        'comment_btn': 'Comment',
+        'reply_placeholder': 'Write a reply...',
+        'reply_btn': 'Reply',
+        'no_posts': 'No posts available yet.',
+        'no_users': 'No registered users.',
+        'tab_emp_posts': '📌 Posts for Employer',
+        'tab_employee_posts': '📌 Posts for Employee',
+        'tab_create': '✍️ Post an Ad',
+        'tab_workers': '👷‍♂️ Registered Workers',
+        'tab_companies': '🏢 Registered Companies',
+        'workers_title': 'List of Registered Workers / Job Seekers',
+        'companies_title': 'List of Registered Companies',
+        'no_workers': 'No registered workers yet.',
+        'no_companies': 'No registered companies yet.',
+        'menu_title': 'Menu'
     }
 }
 
@@ -166,6 +166,10 @@ def index():
         return redirect(url_for('login'))
     
     current_user = session['user']
+
+    if current_user == 'admin':
+        return redirect(url_for('admin'))
+
     role = session.get('role', 'employer')
     lang = session.get('lang', 'tl')
     t = TRANSLATIONS[lang]
@@ -173,11 +177,12 @@ def index():
     conn = get_db()
     cursor = conn.cursor()
     
-    cursor.execute("SELECT username, role, company, barangay, skills, phone FROM users")
-    users_list = cursor.fetchall()
+    # Naka-convert na ito sa plain list of lists para maging JSON serializable
+    cursor.execute("SELECT username, role, company, barangay, skills, phone FROM users WHERE username != 'admin'")
+    users_list = [[row[0], row[1], row[2], row[3], row[4], row[5]] for row in cursor.fetchall()]
     
     cursor.execute("SELECT sender, receiver, message FROM messages WHERE receiver = ? OR sender = ? ORDER BY id DESC", (current_user, current_user))
-    messages = cursor.fetchall()
+    messages = [[row[0], row[1], row[2]] for row in cursor.fetchall()]
     
     cursor.execute("SELECT message, post_id FROM notifications WHERE username = ? ORDER BY id DESC", (current_user,))
     notifications = cursor.fetchall()
@@ -193,10 +198,61 @@ def index():
                            current_lang=lang,
                            t=t)
 
+@app.route('/admin')
+def admin():
+    if 'user' not in session or session['user'] != 'admin':
+        return redirect(url_for('login'))
+        
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT * FROM users ORDER BY id DESC")
+    users = cursor.fetchall()
+    
+    cursor.execute("SELECT * FROM posts ORDER BY id DESC")
+    posts = cursor.fetchall()
+    
+    conn.close()
+    return render_template('admin.html', users=users, posts=posts)
+
+@app.route('/admin/delete_post/<int:post_id>', methods=['POST'])
+def admin_delete_post(post_id):
+    if 'user' not in session or session['user'] != 'admin':
+        return redirect(url_for('login'))
+        
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM posts WHERE id = ?", (post_id,))
+    cursor.execute("DELETE FROM comments WHERE post_id = ?", (post_id,))
+    cursor.execute("DELETE FROM notifications WHERE post_id = ?", (post_id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('admin'))
+
+@app.route('/admin/delete_user/<int:user_id>', methods=['POST'])
+def admin_delete_user(user_id):
+    if 'user' not in session or session['user'] != 'admin':
+        return redirect(url_for('login'))
+        
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT username FROM users WHERE id = ?", (user_id,))
+    user_row = cursor.fetchone()
+    if user_row:
+        username = user_row['username']
+        cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        cursor.execute("DELETE FROM posts WHERE posted_by = ?", (username,))
+        cursor.execute("DELETE FROM comments WHERE commenter = ?", (username,))
+        cursor.execute("DELETE FROM messages WHERE sender = ? OR receiver = ?", (username, username))
+        cursor.execute("DELETE FROM notifications WHERE username = ?", (username,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('admin'))
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username = request.form['username']
+        fullname = request.form['username'].strip()
         password = request.form['password']
         role = request.form['role']
         
@@ -211,25 +267,25 @@ def register():
             cursor.execute('''
                 INSERT INTO users (username, password, role, company, barangay, skills, phone) 
                 VALUES (?, ?, ?, ?, ?, ?, ?)
-            ''', (username, password, role, company, barangay, skills, phone))
+            ''', (fullname, password, role, company, barangay, skills, phone))
             conn.commit()
             conn.close()
             return redirect(url_for('login'))
         except sqlite3.IntegrityError:
             conn.close()
-            return "Username already exists! <a href='/register'>Try again</a>"
+            return render_template('register.html', error="Full name already exists. Please check your inputs.")
             
     return render_template('register.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
+        fullname = request.form['username'].strip()
         password = request.form['password']
         
         conn = get_db()
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM users WHERE username = ? AND password = ?", (username, password))
+        cursor.execute("SELECT * FROM users WHERE LOWER(username) = LOWER(?) AND password = ?", (fullname, password))
         user = cursor.fetchone()
         conn.close()
         
@@ -237,9 +293,11 @@ def login():
             session['user'] = user['username']
             session['role'] = user['role']
             session['lang'] = 'tl'
+            if user['username'] == 'admin':
+                return redirect(url_for('admin'))
             return redirect(url_for('index'))
         else:
-            return "Invalid username or password! <a href='/login'>Try again</a>"
+            return render_template('login.html', error="Invalid Full Name or Password. Please try again.")
             
     return render_template('login.html')
 
@@ -298,11 +356,10 @@ def add_comment(post_id):
             notif_msg = f"{commenter} commented on your post."
             cursor.execute("INSERT INTO notifications (username, message, post_id) VALUES (?, ?, ?)",
                            (post_owner['posted_by'], notif_msg, post_id))
-                       
+                        
     conn.commit()
     conn.close()
     
-    # AJAX request handled without full page reload reset
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return jsonify({'success': True})
         
