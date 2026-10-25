@@ -2,168 +2,224 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Dashboard - Norzagaray Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Norzagaray Skills Portal</title>
     <style>
         body { 
-            font-family: Arial, sans-serif; 
-            background: url('/static/norz.jpg.webp');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #0f172a; 
             color: #f1f5f9; 
             margin: 0; 
-            padding: 20px;
+            padding: 20px; 
         }
-        .header-bar {
+        .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(15, 23, 42, 0.9);
+            background: #1e293b;
             padding: 15px 25px;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
             margin-bottom: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
-        h2 { color: #38bdf8; margin: 0; }
-        .logout-btn {
-            background: #ef4444;
-            color: white;
-            text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-weight: bold;
+        .header h1 { margin: 0; font-size: 24px; color: #38bdf8; }
+        .btn-logout {
+            background: #ef4444; color: white; padding: 8px 16px; 
+            text-decoration: none; border-radius: 6px; font-weight: bold;
+        }
+        .section-card {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .section-card h2 {
+            margin-top: 0;
+            color: #38bdf8;
+            border-bottom: 2px solid #334155;
+            padding-bottom: 10px;
+            font-size: 18px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #334155;
             font-size: 14px;
         }
-        .logout-btn:hover { background: #dc2626; }
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
+        th { background: #0f172a; color: #94a3b8; }
+        .btn-approve {
+            background: #22c55e; color: white; border: none; 
+            padding: 6px 12px; border-radius: 5px; cursor: pointer; font-weight: bold;
         }
-        @media (max-width: 800px) {
-            .dashboard-grid { grid-template-columns: 1fr; }
+        .btn-approve:hover { background: #16a34a; }
+        .btn-delete {
+            background: #ef4444; color: white; border: none; 
+            padding: 6px 12px; border-radius: 5px; cursor: pointer; font-weight: bold;
         }
-        .card {
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(10px);
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        .btn-delete:hover { background: #dc2626; }
+        .badge-pending {
+            background: #eab308; color: #000; padding: 3px 8px; 
+            border-radius: 12px; font-weight: bold; font-size: 11px;
         }
-        .card h3 {
-            color: #38bdf8;
-            margin-top: 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding-bottom: 10px;
+        .badge-approved {
+            background: #22c55e; color: #fff; padding: 3px 8px; 
+            border-radius: 12px; font-weight: bold; font-size: 11px;
         }
-        .item-list {
-            max-height: 550px;
-            overflow-y: auto;
-        }
-        .item-box {
-            background: rgba(30, 41, 59, 0.7);
-            padding: 12px;
+        .post-item {
+            background: #0f172a;
+            padding: 15px;
             border-radius: 8px;
             margin-bottom: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border: 1px solid rgba(255, 255, 255, 0.05);
         }
-        .item-details {
-            font-size: 13px;
-            line-height: 1.4;
-        }
-        .btn-delete {
-            background: #ef4444;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 12px;
-            transition: background 0.2s;
-        }
-        .btn-delete:hover { background: #dc2626; }
-        .tag {
-            display: inline-block;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: bold;
-            margin-left: 5px;
-        }
-        .tag-emp { background: #0284c7; color: white; }
-        .tag-worker { background: #059669; color: white; }
     </style>
 </head>
 <body>
 
-    <div class="header-bar">
-        <h2>📊 Admin Dashboard</h2>
-        <div>
-            <a href="/logout" class="logout-btn">Logout</a>
-        </div>
+    <div class="header">
+        <h1>🛡️ Admin Dashboard - Control Panel</h1>
+        <a href="/logout" class="btn-logout">Logout</a>
     </div>
 
-    <div class="dashboard-grid">
-        <!-- Monitoring Registered Users -->
-        <div class="card">
-            <h3>👥 Registered Users</h3>
-            <div class="item-list">
+    <!-- 1. PENDING EMPLOYER APPROVALS -->
+    <div class="section-card">
+        <h2>⏳ Pending Employer Registrations (Needs Approval)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Full Name</th>
+                    <th>Company / Business</th>
+                    <th>Position</th>
+                    <th>Contact Info</th>
+                    <th>Business Permit / Proof</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set pending_count = namespace(value=0) %}
+                {% for u in users %}
+                    {% if u.role == 'employer' and u.status == 'pending' %}
+                        {% set pending_count.value = pending_count.value + 1 %}
+                        <tr>
+                            <td><b>{{ u.username }}</b></td>
+                            <td>{{ u.company }}</td>
+                            <td>{{ u.position }}</td>
+                            <td>{{ u.phone }}<br><small>{{ u.gmail }}</small></td>
+                            <td>
+                                {% if u.proof %}
+                                    <a href="/static/uploads/{{ u.proof }}" target="_blank" style="color: #38bdf8; font-weight: bold; text-decoration: underline;">
+                                        📷 View Uploaded Permit
+                                    </a>
+                                {% else %}
+                                    <span style="color: #94a3b8;">No proof uploaded</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <form action="/admin/approve_user/{{ u.id }}" method="POST" style="display:inline;">
+                                    <button type="submit" class="btn-approve">Approve</button>
+                                </form>
+                                <form action="/admin/delete_user/{{ u.id }}" method="POST" style="display:inline;" onsubmit="return confirm('Reject and delete this applicant?')">
+                                    <button type="submit" class="btn-delete">Reject</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+
+                {% if pending_count.value == 0 %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #94a3b8; padding: 20px;">
+                            No pending employer registrations at the moment.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 2. ALL REGISTERED USERS MANAGEMENT -->
+    <div class="section-card">
+        <h2>👥 Registered Users (Workers & Approved Employers)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Full Name</th>
+                    <th>Role</th>
+                    <th>Barangay / Address</th>
+                    <th>Skills / Company Info</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
                 {% for u in users %}
                     {% if u.username != 'admin' %}
-                    <div class="item-box">
-                        <div class="item-details">
-                            <b style="color: #38bdf8; font-size: 15px;">{{ u.username }}</b>
-                            <span class="tag {% if u.role == 'employee' %}tag-emp{% else %}tag-worker{% endif %}">
-                                {{ u.role | capitalize }}
-                            </span>
-                            <br>
-                            <span style="color: #cbd5e1;">
-                                {% if u.role == 'employee' %}
-                                    <b>Company:</b> {{ u.company or 'N/A' }}
+                        <tr>
+                            <td>#{{ u.id }}</td>
+                            <td><b>{{ u.username }}</b><br><small>{{ u.gmail }}</small></td>
+                            <td><span style="text-transform: capitalize;">{{ u.role }}</span></td>
+                            <td>{{ u.barangay }} {{ '(' + u.address + ')' if u.address else '' }}</td>
+                            <td>
+                                {% if u.role == 'worker' %}
+                                    <span style="color: #38bdf8;">{{ u.skills if u.skills else 'N/A' }}</span>
                                 {% else %}
-                                    <b>Skills:</b> {{ u.skills or 'N/A' }}
+                                    <b>{{ u.company }}</b> ({{ u.position }})<br>
+                                    {% if u.proof %}
+                                        <a href="/static/uploads/{{ u.proof }}" target="_blank" style="font-size: 11px; color: #38bdf8;">📷 Permit</a>
+                                    {% endif %}
                                 {% endif %}
-                            </span>
-                        </div>
-                        <form action="/admin/delete_user/{{ u.id }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this user?');">
-                            <button type="submit" class="btn-delete">Delete User</button>
-                        </form>
-                    </div>
+                            </td>
+                            <td>
+                                {% if u.status == 'approved' %}
+                                    <span class="badge-approved">Approved</span>
+                                {% else %}
+                                    <span class="badge-pending">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <form action="/admin/delete_user/{{ u.id }}" method="POST" onsubmit="return confirm('Delete this user? All their posts and messages will be removed.')">
+                                    <button type="submit" class="btn-delete">Delete User</button>
+                                </form>
+                            </td>
+                        </tr>
                     {% endif %}
-                {% else %}
-                    <p style="color: #94a3b8; font-style: italic;">No registered users yet.</p>
                 {% endfor %}
-            </div>
-        </div>
+            </tbody>
+        </table>
+    </div>
 
-        <!-- Monitoring Posted Ads / Jobs -->
-        <div class="card">
-            <h3>📝 Posted Ads / Jobs</h3>
-            <div class="item-list">
-                {% for p in posts %}
-                <div class="item-box">
-                    <div class="item-details">
-                        <b style="color: #38bdf8; font-size: 15px;">{{ p.title }}</b><br>
-                        <span style="color: #cbd5e1;">{{ p.description }}</span><br>
-                        <small style="color: #94a3b8;">
-                            <b>Posted by:</b> {{ p.posted_by }} | <b>Barangay:</b> {{ p.barangay }}
+    <!-- 3. POSTS MANAGEMENT -->
+    <div class="section-card">
+        <h2>📝 All Community Job Posts & Ads</h2>
+        {% if posts %}
+            {% for p in posts %}
+                <div class="post-item">
+                    <div>
+                        <h4 style="margin: 0 0 5px 0; color: #38bdf8;">{{ p.title }}</h4>
+                        <p style="margin: 0; font-size: 13px; color: #cbd5e1;">{{ p.description }}</p>
+                        <small style="color: #94a3b8; display: block; margin-top: 5px;">
+                            Posted by: <b>{{ p.posted_by }}</b> | Barangay: <b>{{ p.barangay }}</b> | Salary: <b>₱{{ p.salary }} ({{ p.rate_type }})</b>
                         </small>
                     </div>
-                    <form action="/admin/delete_post/{{ p.id }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this post?');">
-                        <button type="submit" class="btn-delete">Delete Post</button>
-                    </form>
+                    <div>
+                        <form action="/admin/delete_post/{{ p.id }}" method="POST" onsubmit="return confirm('Delete this post?')">
+                            <button type="submit" class="btn-delete">Delete Post</button>
+                        </form>
+                    </div>
                 </div>
-                {% else %}
-                    <p style="color: #94a3b8; font-style: italic;">No posted ads available yet.</p>
-                {% endfor %}
-            </div>
-        </div>
+            {% endfor %}
+        {% else %}
+            <p style="color: #94a3b8; font-style: italic;">No posted ads available yet.</p>
+        {% endif %}
     </div>
 
 </body>
