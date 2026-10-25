@@ -2,76 +2,60 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Login - Norzagaray Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Norzagaray Skills Portal</title>
     <style>
         body { 
             font-family: Arial, sans-serif; 
-            background: url('/static/norz.jpg.webp');
+            background: url('/static/norz.jpg.webp') no-repeat center center fixed;
             background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
+            display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; 
         }
-        .card {
-            background: rgba(15, 23, 42, 0.88);
-            backdrop-filter: blur(10px);
-            padding: 30px;
-            border-radius: 12px;
-            width: 350px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-            color: #ffffff;
-            border: 1px solid #334155;
+        .card { 
+            background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(12px);
+            padding: 40px; border-radius: 12px; width: 400px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6); border: 1px solid rgba(255, 255, 255, 0.15); 
+            color: #f1f5f9; text-align: center;
         }
-        h2 { text-align: center; color: #38bdf8; margin-top: 0; }
-        label { font-size: 13px; color: #cbd5e1; }
-        input {
-            width: 100%;
-            padding: 10px;
-            margin: 8px 0 15px 0;
-            border-radius: 6px;
-            border: 1px solid #475569;
-            background: #1e293b;
-            color: #ffffff;
-            box-sizing: border-box;
+        input { 
+            width: 100%; padding: 12px; margin: 8px 0 16px 0; border-radius: 8px; 
+            border: 1px solid rgba(255, 255, 255, 0.2); box-sizing: border-box; 
+            background: rgba(30, 41, 59, 0.8); color: #f1f5f9; font-size: 14px;
         }
-        .btn {
-            width: 100%;
-            padding: 10px;
-            background: #0284c7;
-            color: white;
-            font-weight: bold;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-        .btn:hover { background: #0ea5e9; }
-        .error { color: #f87171; font-size: 12px; text-align: center; margin-bottom: 10px; background: rgba(239, 68, 68, 0.1); padding: 8px; border-radius: 6px; }
-        .link { text-align: center; margin-top: 15px; font-size: 13px; }
-        .link a { color: #38bdf8; text-decoration: none; }
+        .btn { width: 100%; padding: 12px; background: #0ea5e9; color: #fff; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; }
+        .btn:hover { background: #0284c7; }
+        .error { color: #ef4444; font-size: 13px; margin-bottom: 10px; }
+        .success { color: #34d399; font-size: 13px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
     <div class="card">
-        <h2>Login Portal</h2>
+        <h2 style="color: #38bdf8; margin-top: 0; margin-bottom: 25px;">Login Portal</h2>
+        
         {% if error %}
-            <p class="error">{{ error }}</p>
+            <div class="error">{{ error }}</div>
         {% endif %}
-        <form action="/login" method="POST">
-            <label>Full Name</label>
-            <input type="text" name="username" placeholder="Enter Full Name" required autocomplete="off">
+        {% if success %}
+            <div class="success">{{ success }}</div>
+        {% endif %}
 
-            <label>Password</label>
+        <form action="/login" method="POST">
+            <div style="text-align: left;">
+                <label><b>Username</b></label>
+            </div>
+            <input type="text" name="username" placeholder="Enter Username" required>
+
+            <div style="text-align: left;">
+                <label><b>Password</b></label>
+            </div>
             <input type="password" name="password" placeholder="Enter Password" required>
 
-            <button type="submit" class="btn">Login</button>
+            <button type="submit" class="btn" style="margin-top: 10px;">Login</button>
         </form>
-        <div class="link">
-            <p>Don't have an account? <a href="/register">Register here</a></p>
-        </div>
+
+        <p style="margin-top: 20px; font-size: 13px;">
+            Don't have an account? <a href="/register" style="color: #38bdf8; text-decoration: none;">Register here</a>
+        </p>
     </div>
 </body>
 </html>
