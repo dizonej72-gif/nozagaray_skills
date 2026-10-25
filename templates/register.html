@@ -2,129 +2,261 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - Norzagaray Skills Portal</title>
     <style>
         body { 
             font-family: Arial, sans-serif; 
-            background: url('/static/norz.jpg.webp');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
+            background: #0f172a;
             color: #f1f5f9; 
-            margin: 0; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            height: 100vh; 
+            display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; 
         }
-        .register-card { 
-            background: rgba(15, 23, 42, 0.85); 
-            backdrop-filter: blur(12px);
-            padding: 30px; 
-            border-radius: 12px; 
-            width: 380px; 
-            box-shadow: 0 10px 40px rgba(0,0,0,0.6); 
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            max-height: 90vh;
-            overflow-y: auto;
+        .card { 
+            background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px);
+            padding: 30px; border-radius: 12px; width: 450px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6); border: 1px solid rgba(255, 255, 255, 0.15); 
         }
-        h2 { text-align: center; color: #38bdf8; margin-top: 0; }
-        label { font-size: 13px; color: #94a3b8; display: block; margin-top: 10px; }
-        input, select { 
-            width: 100%; padding: 10px; margin-top: 5px; border-radius: 8px; 
+        input, select, textarea { 
+            width: 100%; padding: 10px; margin: 6px 0 14px 0; border-radius: 8px; 
             border: 1px solid rgba(255, 255, 255, 0.2); box-sizing: border-box; 
-            background: rgba(30, 41, 59, 0.8); color: #f1f5f9; outline: none; font-size: 14px;
+            background: rgba(30, 41, 59, 0.8); color: #f1f5f9; font-size: 14px;
         }
-        .btn { 
-            width: 100%; padding: 10px; background: #0ea5e9; color: #ffffff; 
-            font-weight: bold; border: none; border-radius: 8px; cursor: pointer; 
-            margin-top: 20px; transition: background 0.2s;
-        }
+        .btn { width: 100%; padding: 12px; background: #0ea5e9; color: #fff; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; }
         .btn:hover { background: #0284c7; }
-        .error { color: #f87171; font-size: 12px; text-align: center; margin-bottom: 10px; background: rgba(239, 68, 68, 0.1); padding: 8px; border-radius: 6px; }
-        .login-link { text-align: center; margin-top: 15px; font-size: 13px; }
-        .login-link a { color: #38bdf8; text-decoration: none; }
-        .login-link a:hover { text-decoration: underline; }
+        .error { color: #ef4444; font-size: 13px; margin-bottom: 10px; text-align: center; }
+        
+        /* GENDER SELECTION STYLES */
+        .gender-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 14px;
+        }
+        .gender-card {
+            flex: 1;
+            background: rgba(30, 41, 59, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .gender-card input {
+            display: none;
+        }
+        .gender-card.selected {
+            border-color: #0ea5e9;
+            background: rgba(14, 165, 233, 0.15);
+        }
+        .skill-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
     </style>
 </head>
 <body>
-
-    <div class="register-card">
-        <h2>Create Account</h2>
+    <div class="card">
+        <h2 style="color: #38bdf8; text-align: center; margin-top: 0;">Create Account</h2>
         
         {% if error %}
-            <p class="error">{{ error }}</p>
+            <div class="error">{{ error }}</div>
         {% endif %}
 
-        <form action="/register" method="POST">
+        <form action="/register" method="POST" enctype="multipart/form-data" onsubmit="return validateForm()">
             
-            <label>Full Name:</label>
-            <input type="text" name="username" placeholder="e.g. Juan dela Cruz" required autocomplete="off">
-            
-            <label>Password:</label>
-            <input type="password" name="password" required>
-            
-            <label>Account Role:</label>
-            <select name="role" id="roleSelect" onchange="toggleFields()" required>
-                <option value="employer">Employer / Job Seeker (Looking for work)</option>
-                <option value="employee">Company / Employer (Hiring workers)</option>
+            <!-- 1. GENDER SELECTION -->
+            <label><b>Select Gender:</b></label>
+            <div class="gender-container">
+                <label class="gender-card" id="cardMale" onclick="selectGender('Male')">
+                    <input type="radio" name="gender" value="Male" id="radioMale" required>
+                    <span style="font-size: 24px;">👨‍💼</span><br><b>Male</b>
+                </label>
+                <label class="gender-card" id="cardFemale" onclick="selectGender('Female')">
+                    <input type="radio" name="gender" value="Female" id="radioFemale" required>
+                    <span style="font-size: 24px;">👩‍💼</span><br><b>Female</b>
+                </label>
+            </div>
+
+            <!-- 2. ROLE SELECTION -->
+            <label><b>Account Role:</b></label>
+            <select name="role" id="roleSelect" onchange="toggleRoleFields()" required>
+                <option value="worker">Worker (Job Seeker)</option>
+                <option value="employer">Employer / Business Owner</option>
             </select>
 
-            <!-- Fields para sa Employer / Job Seeker -->
-            <div id="employerFields">
-                <label>Barangay:</label>
-                <select name="barangay">
-                    <option value="">-- Select Norzagaray Barangay --</option>
-                    <option value="Bangkal">Bangkal</option>
-                    <option value="Baraka">Baraka</option>
+            <!-- Worker Specific Fields -->
+            <div id="workerFields">
+                <label><b>Barangay in Norzagaray:</b></label>
+                <select name="barangay" id="barangaySelect" required>
+                    <option value="" disabled selected>Select Barangay</option>
+                    <option value="Norzagaray Proper">Poblacion</option>
                     <option value="Bigte">Bigte</option>
-                    <option value="Bitungol">Bitungol</option>
-                    <option value="Friendship Village Resources (FVR)">Friendship Village Resources (FVR)</option>
+                    <option value="San Mateo">San Mateo</option>
+                    <option value="Partida">Partida</option>
                     <option value="Matictic">Matictic</option>
                     <option value="Minuyan">Minuyan</option>
-                    <option value="Norzagaray Poblacion">Norzagaray Poblacion</option>
-                    <option value="Partida">Partida</option>
-                    <option value="Pinagtulayan">Pinagtulayan</option>
-                    <option value="Poblacion">Poblacion</option>
-                    <option value="San Mateo">San Mateo</option>
+                    <option value="Bitungol">Bitungol</option>
                     <option value="Tigbe">Tigbe</option>
+                    <option value="Pinagtulayan">Pinagtulayan</option>
+                    <option value="Bangkal">Bangkal</option>
+                    <option value="Baraka">Baraka</option>
+                    <option value="Fvr">Fvr</option>
+                    <option value="San Lorenzo">San Lorenzo</option>
                 </select>
 
-                <label>Skills:</label>
-                <input type="text" name="skills" placeholder="e.g. Carpentry, Welding, Plumbing">
+                <label><b>Current Address:</b></label>
+                <input type="text" name="address" id="addressInput" placeholder="House #, Street Address" required>
 
-                <label>Phone Number:</label>
-                <input type="text" name="phone" placeholder="e.g. 09123456789">
+                <label><b>Primary Skills:</b></label>
+                <select name="skills" id="skillsSelect" required>
+                    <option value="" disabled selected>Select Skill</option>
+                    <option value="Driver">Driver</option>
+                    <option value="IT">IT (Information Technology)</option>
+                    <option value="Plumbing">Plumbing</option>
+                    <option value="Others">Others (Specify)</option>
+                </select>
+
+                <label style="font-size: 13px; color: #94a3b8;">Additional Skills (Optional):</label>
+                <div id="skillInputsList">
+                    <div class="skill-row">
+                        <input type="text" name="other_skills[]" placeholder="Enter extra skill" style="margin: 0; flex: 1;">
+                        <button type="button" onclick="addSkillField()" style="background: #0ea5e9; color: white; border: none; padding: 10px 14px; border-radius: 6px; cursor: pointer; font-weight: bold;">+</button>
+                    </div>
+                </div>
             </div>
 
-            <!-- Fields para sa Company / Employee -->
-            <div id="employeeFields" style="display: none;">
-                <label>Company Name:</label>
-                <input type="text" name="company" placeholder="e.g. ABC Corporation">
+            <!-- Employer Specific Fields -->
+            <div id="employerFields" style="display: none;">
+                <label><b>Company or Business Name:</b></label>
+                <input type="text" id="companyInput" name="company" placeholder="Business Name">
+
+                <label><b>Your Position in Company:</b></label>
+                <input type="text" id="positionInput" name="position" placeholder="e.g., Owner, Manager, HR">
+
+                <label><b>Upload Business Permit / Legitimacy Proof (Optional):</b></label>
+                <input type="file" id="proofInput" name="proof" accept="image/*" style="background: transparent; border: none; padding: 0;">
             </div>
 
-            <button type="submit" class="btn">Register</button>
+            <label><b>Mobile Phone Number:</b></label>
+            <input type="text" name="phone" placeholder="09XXXXXXXXX" required>
+
+            <label><b>Gmail Address:</b></label>
+            <input type="email" name="email" placeholder="name@gmail.com" required>
+
+            <!-- 3. PINAKAHULI: FULL NAME, USERNAME AT PASSWORD -->
+            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.15); margin: 15px 0;">
+            
+            <label><b>Full Name:</b></label>
+            <input type="text" name="full_name" placeholder="Hal. Juan Dela Cruz Jr." required>
+
+            <label><b>Username (For Login):</b></label>
+            <input type="text" name="username" placeholder="Choose a unique username" required>
+
+            <label><b>Password (Min. 6 chars with symbol !@#$%^&*):</b></label>
+            <input type="password" id="password" name="password" placeholder="Password" required oninput="checkPasswordStrength()">
+            <small id="pwdMatchMsg" style="color: #94a3b8; display: block; margin-top: -8px; margin-bottom: 10px; font-size: 11px;"></small>
+
+            <label><b>Confirm Password:</b></label>
+            <input type="password" id="confirm_password" placeholder="Confirm Password" required oninput="checkPasswordStrength()">
+
+            <button type="submit" class="btn" style="margin-top: 10px;">Register Account</button>
         </form>
 
-        <div class="login-link">
-            Already have an account? <a href="/login">Log in here</a>
-        </div>
+        <p style="text-align: center; margin-top: 15px; font-size: 13px;">
+            Already have an account? <a href="/login" style="color: #38bdf8; text-decoration: none;">Login here</a>
+        </p>
     </div>
 
     <script>
-        function toggleFields() {
-            var role = document.getElementById("roleSelect").value;
-            var empFields = document.getElementById("employerFields");
-            var employeeFields = document.getElementById("employeeFields");
-
-            if (role === "employer") {
-                empFields.style.display = "block";
-                employeeFields.style.display = "none";
+        function selectGender(gender) {
+            document.getElementById('radioMale').checked = (gender === 'Male');
+            document.getElementById('radioFemale').checked = (gender === 'Female');
+            
+            if (gender === 'Male') {
+                document.getElementById('cardMale').classList.add('selected');
+                document.getElementById('cardFemale').classList.remove('selected');
             } else {
-                empFields.style.display = "none";
-                employeeFields.style.display = "block";
+                document.getElementById('cardFemale').classList.add('selected');
+                document.getElementById('cardMale').classList.remove('selected');
             }
         }
+
+        function addSkillField() {
+            const list = document.getElementById('skillInputsList');
+            const row = document.createElement('div');
+            row.className = 'skill-row';
+            row.style.marginTop = '8px';
+            row.innerHTML = `
+                <input type="text" name="other_skills[]" placeholder="Enter extra skill" style="margin: 0; flex: 1;" required>
+                <button type="button" onclick="this.parentElement.remove()" style="background: #ef4444; color: white; border: none; padding: 10px 14px; border-radius: 6px; cursor: pointer; font-weight: bold;">-</button>
+            `;
+            list.appendChild(row);
+        }
+
+        function toggleRoleFields() {
+            const role = document.getElementById('roleSelect').value;
+            const companyInput = document.getElementById('companyInput');
+            const positionInput = document.getElementById('positionInput');
+            const skillsSelect = document.getElementById('skillsSelect');
+            const barangaySelect = document.getElementById('barangaySelect');
+            const addressInput = document.getElementById('addressInput');
+
+            if (role === 'employer') {
+                document.getElementById('workerFields').style.display = 'none';
+                document.getElementById('employerFields').style.display = 'block';
+                
+                skillsSelect.removeAttribute('required');
+                barangaySelect.removeAttribute('required');
+                addressInput.removeAttribute('required');
+
+                companyInput.setAttribute('required', 'true');
+                positionInput.setAttribute('required', 'true');
+            } else {
+                document.getElementById('workerFields').style.display = 'block';
+                document.getElementById('employerFields').style.display = 'none';
+                
+                skillsSelect.setAttribute('required', 'true');
+                barangaySelect.setAttribute('required', 'true');
+                addressInput.setAttribute('required', 'true');
+
+                companyInput.removeAttribute('required');
+                positionInput.removeAttribute('required');
+            }
+        }
+
+        function checkPasswordStrength() {
+            const p1 = document.getElementById('password').value;
+            const p2 = document.getElementById('confirm_password').value;
+            const msg = document.getElementById('pwdMatchMsg');
+            
+            const hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(p1);
+            if (p1.length > 0 && (!hasSymbol || p1.length < 6)) {
+                msg.style.color = '#ef4444';
+                msg.innerText = '⚠️ Must be at least 6 chars with a symbol (!@#$...)';
+            } else if (p1 !== p2 && p2.length > 0) {
+                msg.style.color = '#ef4444';
+                msg.innerText = '⚠️ Passwords do not match';
+            } else if (p1 === p2 && p1.length > 0) {
+                msg.style.color = '#34d399';
+                msg.innerText = '✔ Secure and matching passwords';
+            } else {
+                msg.innerText = '';
+            }
+        }
+
+        function validateForm() {
+            const p1 = document.getElementById('password').value;
+            const hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(p1);
+            if (!hasSymbol || p1.length < 6) {
+                alert('Password must be at least 6 characters and include a special symbol (!@#$...).');
+                return false;
+            }
+            return true;
+        }
+
+        toggleRoleFields();
     </script>
 </body>
 </html>
