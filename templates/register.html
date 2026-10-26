@@ -21,39 +21,26 @@
             border: 1px solid rgba(255, 255, 255, 0.2); box-sizing: border-box; 
             background: rgba(30, 41, 59, 0.8); color: #f1f5f9; font-size: 14px;
         }
+        .password-container { position: relative; width: 100%; }
+        .password-container input { padding-right: 40px; margin-bottom: 6px; }
+        .eye-btn {
+            position: absolute; right: 12px; top: 38%; transform: translateY(-50%);
+            background: none; border: none; cursor: pointer; padding: 0; display: flex; align-items: center;
+            color: #94a3b8;
+        }
+        .eye-btn:hover { color: #f1f5f9; }
         .btn { width: 100%; padding: 12px; background: #0ea5e9; color: #fff; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; }
         .btn:hover { background: #0284c7; }
         .error { color: #ef4444; font-size: 13px; margin-bottom: 10px; text-align: center; }
         
-        /* GENDER SELECTION STYLES */
-        .gender-container {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 14px;
-        }
+        .gender-container { display: flex; gap: 15px; margin-bottom: 14px; }
         .gender-card {
-            flex: 1;
-            background: rgba(30, 41, 59, 0.8);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            padding: 12px;
-            text-align: center;
-            cursor: pointer;
-            transition: 0.2s;
+            flex: 1; background: rgba(30, 41, 59, 0.8); border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px; padding: 12px; text-align: center; cursor: pointer; transition: 0.2s;
         }
-        .gender-card input {
-            display: none;
-        }
-        .gender-card.selected {
-            border-color: #0ea5e9;
-            background: rgba(14, 165, 233, 0.15);
-        }
-        .skill-row {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            margin-bottom: 8px;
-        }
+        .gender-card input { display: none; }
+        .gender-card.selected { border-color: #0ea5e9; background: rgba(14, 165, 233, 0.15); }
+        .skill-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
     </style>
 </head>
 <body>
@@ -66,7 +53,6 @@
 
         <form action="/register" method="POST" enctype="multipart/form-data" onsubmit="return validateForm()">
             
-            <!-- 1. GENDER SELECTION -->
             <label><b>Select Gender:</b></label>
             <div class="gender-container">
                 <label class="gender-card" id="cardMale" onclick="selectGender('Male')">
@@ -79,7 +65,6 @@
                 </label>
             </div>
 
-            <!-- 2. ROLE SELECTION -->
             <label><b>Account Role:</b></label>
             <select name="role" id="roleSelect" onchange="toggleRoleFields()" required>
                 <option value="worker">Worker (Job Seeker)</option>
@@ -110,13 +95,19 @@
                 <input type="text" name="address" id="addressInput" placeholder="House #, Street Address" required>
 
                 <label><b>Primary Skills:</b></label>
-                <select name="skills" id="skillsSelect" required>
+                <select name="skills" id="skillsSelect" onchange="checkOtherSkill(this)" required>
                     <option value="" disabled selected>Select Skill</option>
                     <option value="Driver">Driver</option>
                     <option value="IT">IT (Information Technology)</option>
                     <option value="Plumbing">Plumbing</option>
                     <option value="Others">Others (Specify)</option>
                 </select>
+
+                <!-- Others Specify Input Field -->
+                <div id="otherSkillContainer" style="display: none; margin-top: -6px; margin-bottom: 14px;">
+                    <label style="font-size: 13px; color: #38bdf8;">Specify Skill:</label>
+                    <input type="text" id="customSkillInput" name="custom_skill" placeholder="Type your specific skill here...">
+                </div>
 
                 <label style="font-size: 13px; color: #94a3b8;">Additional Skills (Optional):</label>
                 <div id="skillInputsList">
@@ -139,13 +130,12 @@
                 <input type="file" id="proofInput" name="proof" accept="image/*" style="background: transparent; border: none; padding: 0;">
             </div>
 
-            <label><b>Mobile Phone Number:</b></label>
-            <input type="text" name="phone" placeholder="09XXXXXXXXX" required>
+            <label><b>Mobile Phone Number (Eksaktong 11 digits):</b></label>
+            <input type="text" id="phoneInput" name="phone" placeholder="09XXXXXXXXX" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
 
-            <label><b>Gmail Address:</b></label>
-            <input type="email" name="email" placeholder="name@gmail.com" required>
+            <label><b>Gmail Address (Lowercase only):</b></label>
+            <input type="email" id="emailInput" name="email" placeholder="name@gmail.com" oninput="this.value = this.value.toLowerCase()" required>
 
-            <!-- 3. PINAKAHULI: FULL NAME, USERNAME AT PASSWORD -->
             <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.15); margin: 15px 0;">
             
             <label><b>Full Name:</b></label>
@@ -155,11 +145,21 @@
             <input type="text" name="username" placeholder="Choose a unique username" required>
 
             <label><b>Password (Min. 6 chars with symbol !@#$%^&*):</b></label>
-            <input type="password" id="password" name="password" placeholder="Password" required oninput="checkPasswordStrength()">
+            <div class="password-container">
+                <input type="password" id="password" name="password" placeholder="Password" required oninput="checkPasswordStrength()">
+                <button type="button" class="eye-btn" onclick="togglePassword('password', this)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                </button>
+            </div>
             <small id="pwdMatchMsg" style="color: #94a3b8; display: block; margin-top: -8px; margin-bottom: 10px; font-size: 11px;"></small>
 
             <label><b>Confirm Password:</b></label>
-            <input type="password" id="confirm_password" placeholder="Confirm Password" required oninput="checkPasswordStrength()">
+            <div class="password-container">
+                <input type="password" id="confirm_password" placeholder="Confirm Password" required oninput="checkPasswordStrength()">
+                <button type="button" class="eye-btn" onclick="togglePassword('confirm_password', this)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                </button>
+            </div>
 
             <button type="submit" class="btn" style="margin-top: 10px;">Register Account</button>
         </form>
@@ -170,6 +170,18 @@
     </div>
 
     <script>
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const icon = btn.querySelector('svg');
+            if (input.type === "password") {
+                input.type = "text";
+                icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+            } else {
+                input.type = "password";
+                icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+            }
+        }
+
         function selectGender(gender) {
             document.getElementById('radioMale').checked = (gender === 'Male');
             document.getElementById('radioFemale').checked = (gender === 'Female');
@@ -180,6 +192,19 @@
             } else {
                 document.getElementById('cardFemale').classList.add('selected');
                 document.getElementById('cardMale').classList.remove('selected');
+            }
+        }
+
+        function checkOtherSkill(selectObj) {
+            const container = document.getElementById('otherSkillContainer');
+            const customInput = document.getElementById('customSkillInput');
+            if (selectObj.value === 'Others') {
+                container.style.display = 'block';
+                customInput.setAttribute('required', 'true');
+            } else {
+                container.style.display = 'none';
+                customInput.removeAttribute('required');
+                customInput.value = '';
             }
         }
 
@@ -202,14 +227,16 @@
             const skillsSelect = document.getElementById('skillsSelect');
             const barangaySelect = document.getElementById('barangaySelect');
             const addressInput = document.getElementById('addressInput');
+            const customSkillInput = document.getElementById('customSkillInput');
 
             if (role === 'employer') {
                 document.getElementById('workerFields').style.display = 'none';
                 document.getElementById('employerFields').style.display = 'block';
                 
-                skillsSelect.removeAttribute('required');
-                barangaySelect.removeAttribute('required');
-                addressInput.removeAttribute('required');
+                if (skillsSelect) skillsSelect.removeAttribute('required');
+                if (barangaySelect) barangaySelect.removeAttribute('required');
+                if (addressInput) addressInput.removeAttribute('required');
+                if (customSkillInput) customSkillInput.removeAttribute('required');
 
                 companyInput.setAttribute('required', 'true');
                 positionInput.setAttribute('required', 'true');
@@ -217,9 +244,9 @@
                 document.getElementById('workerFields').style.display = 'block';
                 document.getElementById('employerFields').style.display = 'none';
                 
-                skillsSelect.setAttribute('required', 'true');
-                barangaySelect.setAttribute('required', 'true');
-                addressInput.setAttribute('required', 'true');
+                if (skillsSelect) skillsSelect.setAttribute('required', 'true');
+                if (barangaySelect) barangaySelect.setAttribute('required', 'true');
+                if (addressInput) addressInput.setAttribute('required', 'true');
 
                 companyInput.removeAttribute('required');
                 positionInput.removeAttribute('required');
@@ -247,6 +274,18 @@
         }
 
         function validateForm() {
+            const phone = document.getElementById('phoneInput').value;
+            if (phone.length !== 11) {
+                alert('Mobile phone number must be exactly 11 digits (e.g., 09XXXXXXXXX).');
+                return false;
+            }
+
+            const email = document.getElementById('emailInput').value;
+            if (/[A-Z]/.test(email)) {
+                alert('Gmail address must be in all lowercase letters.');
+                return false;
+            }
+
             const p1 = document.getElementById('password').value;
             const hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(p1);
             if (!hasSymbol || p1.length < 6) {
