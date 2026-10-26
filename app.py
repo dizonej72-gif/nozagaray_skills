@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import sqlite3
 import os
+from datetime import datetime
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
@@ -54,12 +55,14 @@ def init_db():
                 posted_by TEXT,
                 title TEXT,
                 description TEXT,
+                skills_needed TEXT,
                 barangay TEXT,
                 salary_option TEXT,
                 salary_amount TEXT,
                 rate_type TEXT,
                 work_type TEXT,
-                phone TEXT
+                phone TEXT,
+                date_posted TEXT
             )
         ''')
 
@@ -205,12 +208,17 @@ def register():
         role = request.form.get('role', 'worker')
         barangay = request.form.get('barangay', '')
         address = request.form.get('address', '')
-        phone = request.form.get('phone', '')
-        gmail = request.form.get('email', '')
+        phone = request.form.get('phone', '').strip()
+        gmail = request.form.get('email', '').strip()
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '')
         
-        skills_list = [request.form.get('skills', '')]
+        primary_skill = request.form.get('skills', '')
+        if primary_skill == 'Others':
+            custom_skill = request.form.get('custom_skill', '').strip()
+            primary_skill = custom_skill if custom_skill else 'Others'
+
+        skills_list = [primary_skill]
         other_skills = request.form.getlist('other_skills[]')
         if other_skills:
             skills_list.extend([s.strip() for s in other_skills if s.strip()])
@@ -221,6 +229,12 @@ def register():
         if role == 'worker':
             company, position = '', ''
             status = 'approved'
+            if 'worker_pic' in request.files:
+                file = request.files['worker_pic']
+                if file and allowed_file(file.filename):
+                    filename = secure_filename(f"worker_{username}_{file.filename}")
+                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                    proof_filename = filename
         else:
             skills_str = ''
             barangay, address = '', ''
@@ -230,7 +244,7 @@ def register():
             if 'proof' in request.files:
                 file = request.files['proof']
                 if file and allowed_file(file.filename):
-                    filename = secure_filename(f"{username}_{file.filename}")
+                    filename = secure_filename(f"employer_{username}_{file.filename}")
                     file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                     proof_filename = filename
 
@@ -285,12 +299,15 @@ def add_post():
         return redirect(url_for('login'))
     title = request.form['title']
     description = request.form['description']
+    skills_needed = request.form.get('skills_needed', '')
     barangay = request.form['barangay']
     salary_option = request.form.get('salary_option', 'amount')
     salary_amount = request.form.get('salary_amount', '')
     rate_type = request.form.get('rate_type', 'Daily')
     work_type = request.form.get('work_type', 'Full-time')
     posted_by = session['user']
+    
+    date_posted = datetime.now().strftime("%B %d, %Y - %I:%M %p")
     
     conn = get_db()
     cursor = conn.cursor()
@@ -299,9 +316,9 @@ def add_post():
     phone = user_record['phone'] if user_record and user_record['phone'] else ''
     
     cursor.execute("""
-        INSERT INTO posts (posted_by, title, description, barangay, salary_option, salary_amount, rate_type, work_type, phone) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (posted_by, title, description, barangay, salary_option, salary_amount, rate_type, work_type, phone))
+        INSERT INTO posts (posted_by, title, description, skills_needed, barangay, salary_option, salary_amount, rate_type, work_type, phone, date_posted) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (posted_by, title, description, skills_needed, barangay, salary_option, salary_amount, rate_type, work_type, phone, date_posted))
     conn.commit()
     conn.close()
     return redirect(url_for('index'))
